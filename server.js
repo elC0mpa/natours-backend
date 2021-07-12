@@ -6,7 +6,12 @@ const userRouter = require('./routes/userRoutes')
 const app = express();
 
 app.use(express.json())
+app.use(morgan('dev'))
 
 
 app.use('/api/v1/tours', tourRouter)
 app.use('/api/v1/users', userRouter)
+
+app.listen(3000, () => {
+    console.log('App running on port 3000');
+})
