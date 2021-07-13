@@ -1,3 +1,5 @@
+const Tour = require('../models/tourModel');
+
 const getAllTours = (req, res) => {
   res.status(500).json({
     status: 'error',
@@ -12,11 +14,21 @@ const getTour = (req, res) => {
   });
 };
 
-const createTour = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'Not implemented route',
-  });
+const createTour = async (req, res) => {
+  try {
+    const newTour = await Tour.create(req.body);
+    res.status(201).json({
+      status: 'sucess',
+      data: {
+        tour: newTour,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error,
+    });
+  }
 };
 
 const updateTour = (req, res) => {
