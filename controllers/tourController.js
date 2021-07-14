@@ -1,4 +1,5 @@
 const Tour = require('../models/tourModel');
+const APIFeatures = require('../utils/ApiFeatures');
 
 const aliasTopTours = async (req, res, next) => {
   req.query.limit = '5';
@@ -9,46 +10,13 @@ const aliasTopTours = async (req, res, next) => {
 
 const getAllTours = async (req, res) => {
   try {
-    // Filtering
-    const queryObj = { ...req.query }; // making a value copy and not a reference one
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach((field) => delete queryObj[field]);
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const tours = await features.query;
 
-    // Advanced filtering
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-
-    let query = Tour.find(JSON.parse(queryStr));
-
-    // Sorting
-    if (req.query.sort) {
-      // sort=price,duration if the client wants to specify more than one sort variable
-      // sort method must receive these variables separated by comma
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    }
-
-    // Field limiting
-    if (req.query.fields) {
-      // same as sort
-      const fields = req.query.fields.split(',').join(' ');
-      query = query.select(fields);
-    }
-
-    // Pagination
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 100;
-    const skip = (page - 1) * limit;
-    query = query.skip(skip).limit(limit);
-
-    if (req.query.page) {
-      const totalTours = await Tour.countDocuments();
-      if (skip >= totalTours) {
-        throw new Error('This page does not exist');
-      }
-    }
-
-    const tours = await query;
     res.status(200).json({
       status: 'success',
       results: tours.length,
@@ -56,10 +24,10 @@ const getAllTours = async (req, res) => {
         tours,
       },
     });
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error,
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err,
     });
   }
 };
