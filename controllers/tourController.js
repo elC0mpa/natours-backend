@@ -2,7 +2,11 @@ const Tour = require('../models/tourModel');
 
 const getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    const queryObj = { ...req.query }; // making a value copy and not a reference one
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach((field) => queryObj.delete(field));
+
+    const tours = await Tour.find(queryObj);
     res.status(200).json({
       status: 'success',
       results: tours.length,
