@@ -4,9 +4,12 @@ const getAllTours = async (req, res) => {
   try {
     const queryObj = { ...req.query }; // making a value copy and not a reference one
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach((field) => queryObj.delete(field));
+    excludedFields.forEach((field) => delete queryObj[field]);
 
-    const tours = await Tour.find(queryObj);
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    const tours = await Tour.find(JSON.parse(queryStr));
     res.status(200).json({
       status: 'success',
       results: tours.length,
