@@ -2,14 +2,26 @@ const Tour = require('../models/tourModel');
 
 const getAllTours = async (req, res) => {
   try {
+    // Filtering
     const queryObj = { ...req.query }; // making a value copy and not a reference one
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
     excludedFields.forEach((field) => delete queryObj[field]);
 
+    // Advanced filtering
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 
-    const tours = await Tour.find(JSON.parse(queryStr));
+    let query = Tour.find(JSON.parse(queryStr));
+
+    // Sorting
+    if (req.query.sort) {
+      // sort=price,duration if the client wants to specify more than one sort variable
+      // sort method must receive these variables separated by comma
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    }
+
+    const tours = await query;
     res.status(200).json({
       status: 'success',
       results: tours.length,
