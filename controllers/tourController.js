@@ -21,6 +21,13 @@ const getAllTours = async (req, res) => {
       query = query.sort(sortBy);
     }
 
+    // Field limiting
+    if (req.query.fields) {
+      // same as sort
+      const fields = req.query.fields.split(',').join(' ');
+      query = query.select(fields);
+    }
+
     const tours = await query;
     res.status(200).json({
       status: 'success',
