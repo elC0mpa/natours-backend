@@ -133,6 +133,62 @@ const getTourStats = async (req, res) => {
   }
 };
 
+const getMonthlyPlan = async (req, res) => {
+  try {
+    const year = req.params.year * 1;
+
+    const plan = await Tour.aggregate([
+      {
+        $unwind: '$startDates', // if an objects contains three startDates, then it would be separated in three items each containing just one startDate
+      },
+      {
+        $match: {
+          // match only the objects which startDate belongs to the year passed in the URL as param
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          // groups the matched objects in previous section and organize them in groups
+          // taking month as criteria
+          _id: { $month: '$startDates' },
+          totalTourStarts: { $sum: 1 },
+          tours: { $push: '$name' },
+        },
+      },
+      {
+        // add a new month field and its value will be the same as id
+        $addFields: { month: '$_id' },
+      },
+      {
+        // _id field hidden
+        $project: { _id: 0 },
+      },
+      {
+        // sorts objects by totalTourStarts in descending order
+        $sort: { totalTourStarts: -1 },
+      },
+      {
+        $limit: 12,
+      },
+    ]);
+    res.status(200).json({
+      status: 'sucess',
+      data: {
+        plan,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error,
+    });
+  }
+};
+
 module.exports = {
   getAllTours,
   getTour,
@@ -141,4 +197,5 @@ module.exports = {
   createTour,
   aliasTopTours,
   getTourStats,
+  getMonthlyPlan,
 };
