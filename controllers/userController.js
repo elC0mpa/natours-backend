@@ -1,3 +1,6 @@
+const User = require('../models/userModel');
+const AppError = require('../utils/AppError');
+
 const getAllUsers = (req, res) => {
   res.status(500).json({
     status: 'error',
@@ -12,11 +15,18 @@ const getUser = (req, res) => {
   });
 };
 
-const createUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'Not implemented route',
-  });
+const signUp = async (req, res, next) => {
+  try {
+    const newUser = await User.create(req.body);
+    res.status(201).json({
+      status: 'sucess',
+      data: {
+        user: newUser,
+      },
+    });
+  } catch (error) {
+    next(new AppError(error.message));
+  }
 };
 
 const updateUser = (req, res) => {
@@ -38,5 +48,5 @@ module.exports = {
   getUser,
   updateUser,
   deleteUser,
-  createUser,
+  signUp,
 };
