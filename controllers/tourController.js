@@ -1,5 +1,6 @@
 const Tour = require('../models/tourModel');
 const APIFeatures = require('../utils/ApiFeatures');
+const AppError = require('../utils/AppError');
 
 const aliasTopTours = async (req, res, next) => {
   req.query.limit = '5';
@@ -8,7 +9,7 @@ const aliasTopTours = async (req, res, next) => {
   next();
 };
 
-const getAllTours = async (req, res) => {
+const getAllTours = async (req, res, next) => {
   try {
     const features = new APIFeatures(Tour.find(), req.query)
       .filter()
@@ -24,15 +25,12 @@ const getAllTours = async (req, res) => {
         tours,
       },
     });
-  } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err,
-    });
+  } catch (error) {
+    next(new AppError(error.message));
   }
 };
 
-const getTour = async (req, res) => {
+const getTour = async (req, res, next) => {
   try {
     const tour = await Tour.findById(req.params.id);
     res.status(200).json({
@@ -40,14 +38,11 @@ const getTour = async (req, res) => {
       tour,
     });
   } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error,
-    });
+    next(new AppError(error.message));
   }
 };
 
-const createTour = async (req, res) => {
+const createTour = async (req, res, next) => {
   try {
     const newTour = await Tour.create(req.body);
     res.status(201).json({
@@ -57,14 +52,11 @@ const createTour = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error,
-    });
+    next(new AppError(error.message));
   }
 };
 
-const updateTour = async (req, res) => {
+const updateTour = async (req, res, next) => {
   try {
     const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -77,28 +69,22 @@ const updateTour = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error,
-    });
+    next(new AppError(error.message));
   }
 };
 
-const deleteTour = async (req, res) => {
+const deleteTour = async (req, res, next) => {
   try {
     await Tour.findByIdAndDelete(req.params.id);
     res.status(204).json({
       status: 'sucess',
     });
   } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error,
-    });
+    next(new AppError(error.message));
   }
 };
 
-const getTourStats = async (req, res) => {
+const getTourStats = async (req, res, next) => {
   try {
     const stats = await Tour.aggregate([
       {
@@ -126,14 +112,11 @@ const getTourStats = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error,
-    });
+    next(new AppError(error.message));
   }
 };
 
-const getMonthlyPlan = async (req, res) => {
+const getMonthlyPlan = async (req, res, next) => {
   try {
     const year = req.params.year * 1;
 
@@ -182,10 +165,7 @@ const getMonthlyPlan = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error,
-    });
+    next(new AppError(error.message));
   }
 };
 
