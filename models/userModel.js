@@ -24,6 +24,14 @@ const userSchema = new mongoose.Schema({
   passwordConfirm: {
     type: String,
     required: [true, 'A user must have a password confirmation'],
+    validate: {
+      // eslint-disable-next-line object-shorthand
+      validator: function (passConf) {
+        // THIS ONLY WORKS ON CREATE AND SAVE
+        return passConf === this.password;
+      },
+      message: 'Passwords are not the same',
+    },
   },
 });
 
