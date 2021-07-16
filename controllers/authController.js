@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { promisify } = require('util');
 const User = require('../models/userModel');
 const AppError = require('../utils/AppError');
 
@@ -60,7 +61,57 @@ const login = async (req, res, next) => {
   }
 };
 
+const protectRoute = async (req, res, next) => {
+  try {
+    let token;
+
+    // Checking if authorization header was sent and if it starts with `Bearer`
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      // Getting token from authorization header
+      token = req.headers.authorization.replace('Bearer ', '').trim();
+    }
+    if (!token) {
+      next(
+        new AppError(
+          'You need to be logged in in order to access this route',
+          401,
+        ),
+      );
+    }
+    // Verifying if the token is correct
+    const decoded = await promisify(jwt.verify)(
+      token,
+      process.env.JWT_SECRET_KEY,
+    );
+    // Verifying if the user to which this token belongs still exists
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) {
+      return next(
+        new AppError('The user belonging to this token does no longer exists'),
+      );
+    }
+
+    // Verifying if the user changed its password after the token was issued
+    if (currentUser.passwordChangedAfterToken(decoded.iat)) {
+      return next(
+        new AppError(
+          'User recently changed password! Please log in again',
+          401,
+        ),
+      );
+    }
+
+    next();
+  } catch (error) {
+    next(new AppError(error.message));
+  }
+};
+
 module.exports = {
   signUp,
   login,
+  protectRoute,
 };
