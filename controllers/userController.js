@@ -16,29 +16,6 @@ const getUser = (req, res) => {
   });
 };
 
-const signUp = async (req, res, next) => {
-  try {
-    const newUser = await User.create({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
-      passwordConfirm: req.body.passwordConfirm,
-    });
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, {
-      expiresIn: process.env.JWT_EXPIRATION_TIME,
-    });
-    res.status(201).json({
-      status: 'sucess',
-      data: {
-        token,
-        user: newUser,
-      },
-    });
-  } catch (error) {
-    next(new AppError(error.message));
-  }
-};
-
 const updateUser = (req, res) => {
   res.status(500).json({
     status: 'error',
@@ -58,5 +35,4 @@ module.exports = {
   getUser,
   updateUser,
   deleteUser,
-  signUp,
 };

@@ -3,10 +3,11 @@ const express = require('express');
 const {
   getAllUsers,
   getUser,
-  signUp,
   deleteUser,
   updateUser,
 } = require('../controllers/userController');
+
+const { signUp } = require('../controllers/authController');
 
 const router = express.Router();
 
