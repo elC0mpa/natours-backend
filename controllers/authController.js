@@ -110,8 +110,24 @@ const protectRoute = async (req, res, next) => {
   }
 };
 
+const restrictRoute =
+  (roles) =>
+  // Input = 'admin user'
+  // roles = ['admin', 'user']
+  (req, res, next) => {
+    roles = roles.split(' ');
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You don´t have permission to perform this action', 403),
+      );
+    }
+
+    next();
+  };
+
 module.exports = {
   signUp,
   login,
   protectRoute,
+  restrictRoute,
 };
