@@ -166,10 +166,42 @@ const forgotPassword = async (req, res, next) => {
   }
 };
 
+const resetPassword = async (req, res, next) => {
+  try {
+    // Get user based on token
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(req.params.token)
+      .digest('hex');
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetTokenExpirationDate: { $gt: Date.now() },
+    });
+    // If token has not expired and there is a user, change the password
+    if (!user) {
+      return next(new AppError('Token is invalid or has expired', 400));
+    }
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpirationDate = undefined;
+    await user.save(); // Middleware will update the passwordChangedAt property
+
+    const token = signToken(user._id);
+    res.status(200).json({
+      status: 'success',
+      token,
+    });
+  } catch (error) {
+    next(new AppError(error.message));
+  }
+};
+
 module.exports = {
   signUp,
   login,
   protectRoute,
   restrictRoute,
   forgotPassword,
+  resetPassword,
 };
