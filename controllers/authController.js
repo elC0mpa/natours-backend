@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
+const crypto = require('crypto');
 const User = require('../models/userModel');
 const AppError = require('../utils/AppError');
 const sendEmail = require('../utils/email');
@@ -135,10 +136,9 @@ const forgotPassword = async (req, res, next) => {
     }
     // Create random secret token
     const resetToken = user.createPassResetToken();
-    await user.save({ validatebeforeSave: false });
+    await user.save({ validateBeforeSave: false });
 
     // Send secret token to user's email
-    console.log(resetToken);
     const resetUrl = `${req.protocol}://${req.get(
       'host',
     )}/api/v1/users/reset-password/${resetToken}`;
@@ -158,7 +158,7 @@ const forgotPassword = async (req, res, next) => {
     } catch (error) {
       user.passwordResetToken = undefined;
       user.passwordResetTokenExpirationDate = undefined;
-      await user.save({ validatebeforeSave: false });
+      await user.save({ validateBeforeSave: false });
       next(new AppError('There was an error sending the email', 500));
     }
   } catch (error) {
@@ -179,7 +179,7 @@ const resetPassword = async (req, res, next) => {
     });
     // If token has not expired and there is a user, change the password
     if (!user) {
-      return next(new AppError('Token is invalid or has expired', 400));
+      return next(new AppError('Token is invalid or has expired', 401));
     }
     user.password = req.body.password;
     user.passwordConfirm = req.body.passwordConfirm;
