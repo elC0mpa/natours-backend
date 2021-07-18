@@ -197,6 +197,27 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const updatePassword = async (req, res, next) => {
+  // Get user from collection
+  const user = await User.findById(req.user._id).select('+password');
+
+  // Check if posted current password is correct
+  if (!(await user.correctPassword(req.body.currentPassword, user.password))) {
+    return next(new AppError('This is not your current password', 401));
+  }
+
+  // Update password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+
+  const token = signToken(user._id);
+  res.status(200).json({
+    status: 'success',
+    token,
+  });
+};
+
 module.exports = {
   signUp,
   login,
@@ -204,4 +225,5 @@ module.exports = {
   restrictRoute,
   forgotPassword,
   resetPassword,
+  updatePassword,
 };
