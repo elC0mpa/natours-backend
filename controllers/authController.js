@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const User = require('../models/userModel');
 const AppError = require('../utils/AppError');
+const sendEmail = require('../utils/email');
 
 // eslint-disable-next-line no-undef
 const signToken = (id) =>
@@ -125,9 +126,50 @@ const restrictRoute =
     next();
   };
 
+const forgotPassword = async (req, res, next) => {
+  try {
+    // Get user based on received email
+    const user = User.findOne({ email: req.body.email });
+    if (!user) {
+      return next(new AppError('This email doesn´t belong to any user', 404));
+    }
+    // Create random secret token
+    const resetToken = user.createPassResetToken();
+    await user.save({ validatebeforeSave: false });
+
+    // Send secret token to user's email
+    console.log(resetToken);
+    const resetUrl = `${req.protocol}://${req.get(
+      'host',
+    )}/api/v1/users/reset-password/${resetToken}`;
+
+    const message = `Forgot your password? Change it by clicking this link: ${resetUrl}.\nIf you didn´t forget it, ignore this message`;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Your password reset token',
+        message,
+      });
+      res.status(201).json({
+        status: 'sucess',
+        message: 'Token sent to email',
+      });
+    } catch (error) {
+      user.passwordResetToken = undefined;
+      user.passwordResetTokenExpirationDate = undefined;
+      await user.save({ validatebeforeSave: false });
+      next(new AppError('There was an error sending the email', 500));
+    }
+  } catch (error) {
+    next(new AppError(error.message));
+  }
+};
+
 module.exports = {
   signUp,
   login,
   protectRoute,
   restrictRoute,
+  forgotPassword,
 };
