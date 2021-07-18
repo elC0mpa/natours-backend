@@ -129,7 +129,7 @@ const restrictRoute =
 const forgotPassword = async (req, res, next) => {
   try {
     // Get user based on received email
-    const user = User.findOne({ email: req.body.email });
+    const user = await User.findOne({ email: req.body.email });
     if (!user) {
       return next(new AppError('This email doesn´t belong to any user', 404));
     }
