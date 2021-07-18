@@ -104,7 +104,7 @@ const protectRoute = async (req, res, next) => {
         ),
       );
     }
-
+    req.user = currentUser;
     next();
   } catch (error) {
     next(new AppError(error.message));
