@@ -22,6 +22,14 @@ const signUp = async (req, res, next) => {
 
     const token = signToken(newUser._id);
 
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production' ? true : false, // set to true when in production
+      expires: new Date(
+        Date.now() +
+          process.env.JWT_COOKIE_EXPIRATION_TIME * 24 * 60 * 60 * 1000,
+      ),
+    });
     res.status(201).json({
       status: 'sucess',
       data: {
@@ -50,7 +58,14 @@ const login = async (req, res, next) => {
     }
 
     const token = signToken(user._id);
-
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production' ? true : false, // set to true when in production
+      expires: new Date(
+        Date.now() +
+          process.env.JWT_COOKIE_EXPIRATION_TIME * 24 * 60 * 60 * 1000,
+      ),
+    });
     res.status(201).json({
       status: 'sucess',
       data: {
@@ -188,6 +203,14 @@ const resetPassword = async (req, res, next) => {
     await user.save(); // Middleware will update the passwordChangedAt property
 
     const token = signToken(user._id);
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production' ? true : false, // set to true when in production
+      expires: new Date(
+        Date.now() +
+          process.env.JWT_COOKIE_EXPIRATION_TIME * 24 * 60 * 60 * 1000,
+      ),
+    });
     res.status(200).json({
       status: 'success',
       token,
@@ -212,6 +235,13 @@ const updatePassword = async (req, res, next) => {
   await user.save();
 
   const token = signToken(user._id);
+  res.cookie('jwt', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production' ? true : false, // set to true when in production
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRATION_TIME * 24 * 60 * 60 * 1000,
+    ),
+  });
   res.status(200).json({
     status: 'success',
     token,
