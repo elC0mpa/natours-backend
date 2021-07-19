@@ -2,11 +2,19 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const AppError = require('../utils/AppError');
 
-const getAllUsers = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'Not implemented route',
-  });
+const getAllUsers = async (req, res, next) => {
+  try {
+    // Will return only active users, this is implemented in the query middleware
+    const users = await User.find();
+    res.status(200).json({
+      status: 'success',
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    next(new AppError(error.message), 500);
+  }
 };
 
 const filterObject = (obj, ...allowedFields) => {
